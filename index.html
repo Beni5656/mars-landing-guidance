@@ -1,0 +1,349 @@
+<title>Descent Guidance</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#0f1521;
+    --panel-2:#131b29;
+    --line:#22303f;
+    --line-soft:#1a2432;
+    --text:#dfe6ee;
+    --text-dim:#7c8aa0;
+    --text-faint:#4d5b70;
+    --accent:#4fd1c5;
+    --accent-dim:#2a6e68;
+    --good:#57d38c;
+    --warn:#e8b34d;
+    --crit:#e5566b;
+    --thrust:#ff8a5c;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+    --sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{background:var(--bg);}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--text);
+    background:var(--bg);
+    padding:20px 20px 40px;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent);}
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* ---- header ---- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:16px;
+    margin-bottom:18px;
+  }
+  .title-block h1{
+    font-family:var(--sans);
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:0.01em;
+    margin:0 0 4px;
+    text-wrap:balance;
+  }
+  .title-block .sub{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-dim);
+    letter-spacing:0.02em;
+  }
+  .badge{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    border:1px solid var(--accent-dim);
+    background:rgba(79,209,197,0.08);
+    padding:5px 10px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+
+  /* ---- layout ---- */
+  .console{
+    display:grid;
+    grid-template-columns:1fr 300px;
+    gap:16px;
+  }
+  @media (max-width:860px){
+    .console{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+  }
+  .panel-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    border-bottom:1px solid var(--line-soft);
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .status-dot{
+    display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--good);margin-right:6px;
+    box-shadow:0 0 6px var(--good);
+  }
+  .status-dot.warn{background:var(--warn);box-shadow:0 0 6px var(--warn);}
+  .status-dot.crit{background:var(--crit);box-shadow:0 0 6px var(--crit);}
+
+  /* ---- main viewport ---- */
+  .viewport-wrap{padding:12px;}
+  canvas#scene{
+    width:100%;
+    display:block;
+    border-radius:4px;
+    background:linear-gradient(180deg,#0c1119 0%, #0a0e15 55%, #0b0e14 100%);
+  }
+  .transport{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 14px 14px;
+  }
+  .btn{
+    font-family:var(--mono);
+    font-size:12px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:7px 14px;
+    border-radius:4px;
+    cursor:pointer;
+    letter-spacing:0.04em;
+  }
+  .btn:hover{border-color:var(--accent-dim);color:var(--accent);}
+  .btn:focus-visible, input:focus-visible, .btn-icon:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .scrub{
+    flex:1;
+    -webkit-appearance:none;
+    height:3px;
+    background:var(--line);
+    border-radius:2px;
+    outline:none;
+  }
+  .scrub::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:13px;height:13px;border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    box-shadow:0 0 6px rgba(79,209,197,0.7);
+  }
+  .scrub::-moz-range-thumb{
+    width:13px;height:13px;border-radius:50%;border:none;
+    background:var(--accent);cursor:pointer;
+  }
+  .met{font-family:var(--mono);font-size:12px;color:var(--text-dim);white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+  /* ---- strip charts ---- */
+  .strips{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    padding:0 12px 14px;
+  }
+  @media (max-width:560px){.strips{grid-template-columns:1fr;}}
+  .strip-title{font-family:var(--mono);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);margin:0 0 4px;}
+  canvas.strip{width:100%;height:64px;display:block;}
+
+  /* ---- telemetry rail ---- */
+  .rail{display:flex;flex-direction:column;gap:16px;}
+  .telemetry{padding:12px 14px 14px;}
+  .tele-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:7px 0;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .tele-row:last-child{border-bottom:none;}
+  .tele-label{font-size:11.5px;color:var(--text-dim);letter-spacing:0.02em;}
+  .tele-val{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;}
+  .tele-val .unit{font-size:11px;color:var(--text-faint);margin-left:3px;}
+  .tele-val.good{color:var(--good);}
+  .tele-val.warn{color:var(--warn);}
+  .tele-val.crit{color:var(--crit);}
+
+  .fuelbar-track{height:8px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-top:8px;}
+  .fuelbar-fill{height:100%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));border-radius:4px;}
+
+  /* ---- controls ---- */
+  .controls{padding:12px 14px 16px;}
+  .ctrl{margin-bottom:14px;}
+  .ctrl:last-child{margin-bottom:0;}
+  .ctrl-label{
+    display:flex;justify-content:space-between;
+    font-size:11.5px;color:var(--text-dim);margin-bottom:6px;
+  }
+  .ctrl-label b{font-family:var(--mono);color:var(--text);font-weight:500;}
+  input[type=range]{
+    width:100%;
+    -webkit-appearance:none;
+    height:3px;
+    background:var(--line);
+    border-radius:2px;
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:14px;height:14px;border-radius:50%;
+    background:var(--text);
+    cursor:pointer;
+    border:2px solid var(--panel);
+    box-shadow:0 0 0 1px var(--line);
+  }
+  input[type=range]:hover::-webkit-slider-thumb{background:var(--accent);}
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;border:2px solid var(--panel);
+    background:var(--text);cursor:pointer;
+  }
+
+  .result-line{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:12px;color:var(--text-dim);
+    padding-top:4px;
+  }
+
+  /* ---- explainer ---- */
+  .explainer{padding:16px 18px;margin-top:16px;}
+  .explainer h2{
+    font-size:15px;margin:0 0 8px;letter-spacing:0.01em;
+  }
+  .explainer p{
+    font-size:13.5px;line-height:1.65;color:var(--text-dim);
+    max-width:66ch;margin:0 0 10px;
+  }
+  .explainer p:last-child{margin-bottom:0;}
+  .explainer code, .explainer .term{font-family:var(--mono);color:var(--text);font-size:0.94em;}
+  .explainer .accent-term{color:var(--accent);}
+  footer{
+    text-align:center;color:var(--text-faint);font-family:var(--mono);
+    font-size:11px;margin-top:22px;letter-spacing:0.03em;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="title-block">
+      <h1>Powered Descent Guidance</h1>
+      <div class="sub">FUEL-OPTIMAL TRAJECTORY &middot; MARS POWERED DESCENT &middot; CONVEX GUIDANCE</div>
+    </div>
+    <div class="badge">GNC SIM &middot; MODEL: ACIKMESE &amp; PLOEN 2007</div>
+  </header>
+
+  <div class="console">
+    <div class="main-col">
+      <div class="panel">
+        <div class="panel-head">
+          <span><span class="status-dot" id="statusDot"></span><span id="statusText">NOMINAL</span></span>
+          <span id="phaseLabel">POWERED DESCENT</span>
+        </div>
+        <div class="viewport-wrap">
+          <canvas id="scene" width="1600" height="620"></canvas>
+        </div>
+        <div class="transport">
+          <button class="btn" id="playBtn">&#9654; PLAY</button>
+          <input type="range" id="scrub" class="scrub" min="0" max="1000" value="0" step="1" aria-label="Scrub through trajectory time">
+          <span class="met" id="metLabel">T+00.0s / 00.0s</span>
+        </div>
+        <div class="strips">
+          <div>
+            <div class="strip-title">Altitude vs. Time</div>
+            <canvas class="strip" id="stripAlt" width="600" height="80"></canvas>
+          </div>
+          <div>
+            <div class="strip-title">Throttle vs. Time</div>
+            <canvas class="strip" id="stripThr" width="600" height="80"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel explainer">
+        <h2>Why this isn't just a physics animation</h2>
+        <p>
+          Bringing a lander from a few kilometers up to a soft, precise touchdown
+          under a bounded, throttleable thrust vector is a real
+          <span class="term">trajectory optimization</span> problem: minimize propellant
+          burned subject to nonlinear dynamics, a maximum tilt angle, throttle limits,
+          and a <span class="term">glide-slope</span> constraint that keeps the approach inside
+          a cone above the pad (visible below as the dashed lines) so the vehicle never
+          grazes terrain.
+        </p>
+        <p>
+          The trick that makes this solvable onboard, in real time, with a flight computer:
+          <span class="accent-term">lossless convexification</span> &mdash; a change of variables that
+          turns the non-convex lower bound on thrust magnitude into a convex second-order-cone
+          program, provably without losing optimality. That result (Acikmese &amp; Ploen, 2007) is the
+          founding method of the <span class="term">Autonomous Controls Lab</span>, led by Behcet
+          Acikmese, which moved to UC Berkeley in 2024 &mdash; the same lab whose descendant
+          algorithm, <span class="term">successive convexification (SCvx)</span>, now guides real
+          planetary landers and reusable rockets.
+        </p>
+        <p>
+          Each trajectory here is precomputed by solving the underlying nonlinear program
+          (60-node RK4 direct transcription, IPOPT) for a grid of initial conditions &mdash; move
+          the sliders to re-target the solver's output and watch the guidance re-plan the
+          entire burn.
+        </p>
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="panel telemetry">
+        <div class="panel-head" style="border:none;padding:0 0 8px;">TELEMETRY</div>
+        <div class="tele-row"><span class="tele-label">Altitude</span><span class="tele-val" id="tAlt">&mdash;</span></div>
+        <div class="tele-row"><span class="tele-label">Downrange</span><span class="tele-val" id="tRange">&mdash;</span></div>
+        <div class="tele-row"><span class="tele-label">Vertical speed</span><span class="tele-val" id="tVy">&mdash;</span></div>
+        <div class="tele-row"><span class="tele-label">Horizontal speed</span><span class="tele-val" id="tVx">&mdash;</span></div>
+        <div class="tele-row"><span class="tele-label">Throttle</span><span class="tele-val" id="tThrottle">&mdash;</span></div>
+        <div class="tele-row"><span class="tele-label">Thrust tilt</span><span class="tele-val" id="tTilt">&mdash;</span></div>
+        <div class="tele-row"><span class="tele-label">Propellant</span><span class="tele-val" id="tFuel">&mdash;</span></div>
+        <div class="fuelbar-track"><div class="fuelbar-fill" id="fuelFill" style="width:100%"></div></div>
+      </div>
+
+      <div class="panel controls">
+        <div class="panel-head" style="border:none;padding:0 0 10px;">TARGETING</div>
+        <div class="ctrl">
+          <div class="ctrl-label"><span>Initial altitude</span><b id="lblY0"></b></div>
+          <input type="range" id="sY0" min="0" max="2" step="1" value="1" aria-label="Initial altitude">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-label"><span>Downrange offset</span><b id="lblX0"></b></div>
+          <input type="range" id="sX0" min="0" max="6" step="1" value="3" aria-label="Downrange offset at start">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-label"><span>Initial lateral velocity</span><b id="lblVX0"></b></div>
+          <input type="range" id="sVX0" min="0" max="4" step="1" value="2" aria-label="Initial lateral velocity">
+        </div>
+        <div class="result-line">
+          <span>Burn time</span><span id="rTf">&mdash;</span>
+        </div>
+        <div class="result-line">
+          <span>Propellant used</span><span id="rFuel">&mdash;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>MARS-REFERENCE POINT-MASS MODEL &middot; g=3.71 m/s&sup2; &middot; NOT FLIGHT SOFTWARE</footer>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
